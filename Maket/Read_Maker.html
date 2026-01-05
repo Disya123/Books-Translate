@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reader Integrated Button</title>
+    <style>
+        :root {
+            --primary: #BB86FC;
+            --bg-color: #121212;
+            --text-color: #dcdcdc;
+            --overlay-bg: rgba(30, 30, 30, 0.9); /* Чуть плотнее фон */
+            --surface: rgba(255,255,255,0.1);
+        }
+
+        body {
+            background-color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            font-family: -apple-system, sans-serif;
+        }
+
+        .phone-frame {
+            width: 375px;
+            height: 812px;
+            background: var(--bg-color);
+            border-radius: 40px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            position: relative;
+            overflow: hidden;
+            border: 12px solid #000;
+        }
+
+        .reader-screen {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            background: var(--bg-color);
+        }
+
+        .scroll-container {
+            width: 100%;
+            height: 100%;
+            overflow-y: auto;
+            scrollbar-width: none; 
+        }
+        .scroll-container::-webkit-scrollbar { display: none; }
+
+        .content-padding {
+            /* Уменьшили нижний отступ, т.к. плавающей кнопки больше нет */
+            padding: 100px 20px 120px 20px; 
+            font-family: 'Georgia', serif;
+            font-size: 18px;
+            line-height: 1.6;
+            color: var(--text-color);
+        }
+
+        .paragraph { margin-bottom: 20px; }
+        
+        .translated {
+            border-left: 2px solid var(--primary);
+            padding-left: 12px;
+            color: #eee;
+        }
+
+        /* --- ПАНЕЛИ --- */
+        .overlay-bar {
+            position: absolute; left: 0; right: 0;
+            background: var(--overlay-bg);
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            z-index: 10;
+            transition: transform 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .header {
+            top: 0; height: 90px;
+            display: flex; align-items: flex-end;
+            padding: 0 15px 15px 15px;
+        }
+        .header.hidden { transform: translateY(-100%); }
+
+        .footer {
+            bottom: 0;
+            padding: 20px 15px 30px 15px;
+            display: flex; flex-direction: column; gap: 16px;
+        }
+        .footer.hidden { transform: translateY(100%); }
+
+        .header-content { width: 100%; display: flex; justify-content: space-between; align-items: center; color: white; }
+
+        /* Ползунок */
+        .progress-row { display: flex; align-items: center; justify-content: space-between; color: #aaa; font-size: 12px; }
+        .track { flex: 1; height: 4px; background: #444; border-radius: 2px; margin: 0 10px; position: relative; }
+        .fill { width: 40%; height: 100%; background: #888; border-radius: 2px; }
+        .thumb { width: 12px; height: 12px; background: white; border-radius: 50%; position: absolute; left: 40%; top: -4px; margin-left: -6px; }
+
+        /* --- НОВАЯ ГРУППА КНОПОК --- */
+        .controls-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        /* Кнопки Навигации (Квадратные со стрелками) */
+        .nav-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 14px;
+            background: var(--surface);
+            border: none;
+            color: white;
+            font-size: 24px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer;
+            flex-shrink: 0; /* Не сжиматься */
+        }
+        .nav-btn:active { background: rgba(255,255,255,0.2); }
+
+        /* Кнопка Перевода (Центральная, большая) */
+        .translate-btn {
+            flex: 1; /* Занимает всё свободное место */
+            height: 50px;
+            border-radius: 14px;
+            background: var(--primary);
+            border: none;
+            color: #000;
+            font-size: 16px;
+            font-weight: 700;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(187, 134, 252, 0.3);
+        }
+        .translate-btn:active { transform: scale(0.98); }
+
+    </style>
+</head>
+<body>
+
+    <div class="phone-frame">
+        
+        <!-- HEADER -->
+        <div class="overlay-bar header" id="header">
+            <div class="header-content">
+                <span style="font-size: 24px; cursor: pointer;">←</span>
+                <span style="font-weight: 600; font-size: 14px;">Глава 17</span>
+                <span style="font-size: 18px;">Aa</span>
+            </div>
+        </div>
+
+        <!-- CONTENT -->
+        <div class="reader-screen">
+            <div class="scroll-container" onclick="toggleUI()">
+                <div class="content-padding">
+                    <p class="paragraph translated">
+                        Джин Ву открыл глаза. Потолок был незнакомым. Белый, стерильный свет резал глаза. "Где я?" — подумал он.
+                    </p>
+                    <p class="paragraph">
+                        Suddenly, a blue screen appeared in front of his eyes. It floated in the air like a hologram.
+                    </p>
+                    <p class="paragraph">
+                        [System: Daily Quest 'Strength Training' has arrived.]
+                    </p>
+                    <p class="paragraph">
+                        Jin-Woo blinked several times. Was he hallucinating? But no matter how many times he rubbed his eyes, the message remained.
+                    </p>
+                    <p class="paragraph">
+                         He tried to sit up, but his body felt heavy as lead. Pain shot through his limbs, reminding him of the dungeon.
+                    </p>
+                    <p class="paragraph">
+                        The memories flooded back. The double dungeon. The smiling statue. The altar. And the sacrifice.
+                    </p>
+                     <p class="paragraph">
+                        "Am I alive?" he whispered, checking his chest. His heart was beating steadily.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- FOOTER С КНОПКАМИ -->
+        <div class="overlay-bar footer" id="footer">
+            <!-- Прогресс -->
+            <div class="progress-row">
+                <span>Гл. 17</span>
+                <div class="track">
+                    <div class="fill"></div>
+                    <div class="thumb"></div>
+                </div>
+                <span>40%</span>
+            </div>
+            
+            <!-- Управление -->
+            <div class="controls-row">
+                <button class="nav-btn">←</button>
+                
+                <button class="translate-btn" onclick="alert('Перевод запущен...')">
+                    <span>✨ Перевести</span>
+                </button>
+                
+                <button class="nav-btn">→</button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        function toggleUI() {
+            const header = document.getElementById('header');
+            const footer = document.getElementById('footer');
+            
+            header.classList.toggle('hidden');
+            footer.classList.toggle('hidden');
+        }
+    </script>
+
+</body>
+</html>

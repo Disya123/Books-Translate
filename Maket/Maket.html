@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Novel Translator Complete</title>
+    <style>
+        :root {
+            /* Palette (Dark Mode) */
+            --primary: #BB86FC;
+            --primary-variant: #3700b3;
+            --bg-color: #121212;
+            --surface: #1E1E1E;
+            --surface-elevated: #2C2C2C; /* Для модалок и поиска */
+            --text-primary: #E0E0E0;
+            --text-secondary: #A0A0A0;
+            --divider: #333333;
+            --input-bg: #2C2C2C;
+            --shadow-fab: 0 6px 16px rgba(0, 0, 0, 0.6);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #222;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            user-select: none;
+        }
+
+        .phone-frame {
+            width: 375px;
+            height: 812px;
+            background: var(--bg-color);
+            border-radius: 40px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            position: relative;
+            overflow: hidden;
+            border: 12px solid #000;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .status-bar {
+            height: 44px;
+            background: var(--bg-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 24px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-primary);
+            z-index: 10;
+        }
+
+        /* --- SCREENS & ANIMATION --- */
+        .screen {
+            position: absolute;
+            top: 44px;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--bg-color);
+            display: none;
+            flex-direction: column;
+            overflow-y: auto;
+            z-index: 1;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        /* Анимация слайда для вложенных экранов */
+        .slide-enter {
+            animation: slideIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            z-index: 10;
+            display: flex;
+        }
+
+        .slide-exit {
+            animation: slideOut 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            z-index: 10;
+            display: flex;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); }
+            to { transform: translateX(0); }
+        }
+        @keyframes slideOut {
+            from { transform: translateX(0); }
+            to { transform: translateX(100%); }
+        }
+
+        /* --- HOME SCREEN COMPONENTS --- */
+        
+        /* Floating Search */
+        .search-container {
+            margin: 10px 16px 20px 16px;
+            background: var(--surface-elevated);
+            border-radius: 16px;
+            height: 52px;
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            border: 1px solid #333;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+        .search-icon { color: var(--text-secondary); font-size: 18px; margin-right: 12px; }
+        .search-input { flex: 1; border: none; background: transparent; font-size: 16px; color: var(--text-primary); outline: none; }
+        .search-input::placeholder { color: #666; }
+        .settings-btn { color: var(--text-secondary); font-size: 20px; padding: 8px; cursor: pointer; transition: color 0.2s; }
+        .settings-btn:active { color: var(--primary); }
+
+        /* Novel Grid */
+        .novel-grid {
+            padding: 0 16px 100px 16px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .novel-card {
+            background: var(--surface);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            cursor: pointer;
+            border: 1px solid #333;
+            transition: transform 0.1s;
+        }
+        .novel-card:active { transform: scale(0.97); }
+
+        .novel-cover {
+            height: 180px;
+            background: #2a2a2a;
+            display: flex; align-items: center; justify-content: center; font-size: 40px;
+            filter: brightness(0.85);
+        }
+        .c1 { background: linear-gradient(135deg, #f6d365 0%, #fda085 100%); }
+        .c2 { background: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%); }
+        .c3 { background: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%); }
+
+        .novel-info { padding: 12px; }
+        .novel-title { font-weight: 500; font-size: 14px; margin-bottom: 4px; line-height: 1.3; color: var(--text-primary); }
+        .novel-meta { font-size: 11px; color: var(--text-secondary); }
+
+        /* FAB */
+        .fab-container {
+            position: absolute; bottom: 30px; right: 20px;
+            display: flex; flex-direction: column; align-items: flex-end; z-index: 50;
+        }
+        .fab-options {
+            display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px;
+            opacity: 0; pointer-events: none; transform: translateY(20px);
+            transition: all 0.2s ease;
+        }
+        .fab-options.open { opacity: 1; pointer-events: auto; transform: translateY(0); }
+        .fab-option-item { display: flex; align-items: center; gap: 12px; }
+        .fab-label {
+            background: var(--surface-elevated); padding: 6px 12px; border-radius: 8px;
+            font-size: 12px; font-weight: 600; color: var(--text-primary);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+        }
+        .fab-mini {
+            width: 40px; height: 40px; border-radius: 50%; background: var(--surface-elevated);
+            color: var(--primary); display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.4); cursor: pointer; border: 1px solid #444;
+        }
+        .fab-main {
+            width: 56px; height: 56px; background: var(--primary); border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            color: #000; font-size: 28px; box-shadow: var(--shadow-fab);
+            cursor: pointer; transition: transform 0.3s;
+        }
+        .fab-main.active { transform: rotate(45deg); background: #9965f4; }
+
+        /* --- SETTINGS SCREENS STYLES --- */
+        .screen-header {
+            padding: 16px; background: var(--bg-color); display: flex; align-items: center;
+            gap: 16px; border-bottom: 1px solid var(--divider); position: sticky; top: 0; z-index: 10;
+        }
+        .back-btn { font-size: 24px; cursor: pointer; color: var(--text-primary); padding: 5px; }
+        .screen-title { font-size: 20px; font-weight: 700; color: var(--text-primary); }
+
+        .settings-list { padding: 20px; }
+        .setting-group { margin-bottom: 24px; }
+        .group-title {
+            font-size: 13px; font-weight: bold; color: var(--primary);
+            margin-bottom: 10px; text-transform: uppercase; padding-left: 10px;
+        }
+        .setting-item {
+            background: var(--surface); padding: 16px; border-bottom: 1px solid #333;
+            display: flex; justify-content: space-between; align-items: center; cursor: pointer;
+        }
+        .setting-item:first-child { border-top-left-radius: 12px; border-top-right-radius: 12px; }
+        .setting-item:last-child { border-bottom-left-radius: 12px; border-bottom-right-radius: 12px; border-bottom: none; }
+        
+        .setting-content { display: flex; align-items: center; gap: 12px; }
+        .setting-icon { font-size: 18px; width: 24px; text-align: center; }
+        .setting-label { font-size: 16px; color: var(--text-primary); }
+        .setting-value { color: var(--text-secondary); font-size: 14px; margin-right: 8px; }
+        .chevron { color: #555; font-size: 14px; }
+        .check-icon { color: var(--primary); display: none; }
+        .setting-item.selected .check-icon { display: block; }
+
+        .input-group { margin-bottom: 20px; }
+        .input-label { color: var(--text-secondary); font-size: 12px; margin-bottom: 6px; display: block; }
+        .text-input {
+            width: 100%; background: var(--input-bg); border: 1px solid #333;
+            border-radius: 8px; padding: 12px; color: white; font-size: 16px; box-sizing: border-box;
+        }
+        .text-input:focus { outline: none; border-color: var(--primary); }
+
+    </style>
+</head>
+<body>
+
+    <div class="phone-frame">
+        <div class="status-bar">
+            <span>09:41</span>
+            <span>🔋 100%</span>
+        </div>
+
+        <!-- 1. ГЛАВНЫЙ ЭКРАН (БИБЛИОТЕКА) -->
+        <div id="home-screen" class="screen active">
+            <!-- Плавающий поиск -->
+            <div class="search-container">
+                <div class="search-icon">🔍</div>
+                <input type="text" class="search-input" placeholder="Поиск новелл...">
+                <!-- Кнопка ведет в настройки -->
+                <div class="settings-btn" onclick="openScreen('settings-main')">⚙️</div>
+            </div>
+            
+            <!-- Сетка новелл -->
+            <div class="novel-grid">
+                <div class="novel-card">
+                    <div class="novel-cover c1">⚔️</div>
+                    <div class="novel-info">
+                        <div class="novel-title">Solo Leveling</div>
+                        <div class="novel-meta">FB2 • 170 глав</div>
+                    </div>
+                </div>
+                <div class="novel-card">
+                    <div class="novel-cover c2">🧙</div>
+                    <div class="novel-info">
+                        <div class="novel-title">TBATE</div>
+                        <div class="novel-meta">EPUB • 420 глав</div>
+                    </div>
+                </div>
+                <div class="novel-card">
+                    <div class="novel-cover c3">🏰</div>
+                    <div class="novel-info">
+                        <div class="novel-title">Lord of Mysteries</div>
+                        <div class="novel-meta">TXT • 1300 глав</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FAB (Плавающая кнопка) -->
+            <div class="fab-container">
+                <div class="fab-options" id="fab-menu">
+                    <div class="fab-option-item">
+                        <div class="fab-label">Импорт файла</div>
+                        <div class="fab-mini">📥</div>
+                    </div>
+                    <div class="fab-option-item">
+                        <div class="fab-label">Создать</div>
+                        <div class="fab-mini">✍️</div>
+                    </div>
+                </div>
+                <div class="fab-main" id="fab-btn" onclick="toggleFab()">+</div>
+            </div>
+        </div>
+
+
+        <!-- 2. ГЛАВНОЕ МЕНЮ НАСТРОЕК -->
+        <div id="settings-main" class="screen">
+            <div class="screen-header">
+                <div class="back-btn" onclick="closeSettings()">←</div>
+                <div class="screen-title">Настройки</div>
+            </div>
+
+            <div class="settings-list">
+                <!-- Группа 1 -->
+                <div class="setting-group">
+                    <div class="group-title">AI и Перевод</div>
+                    
+                    <div class="setting-item" onclick="openScreen('provider-screen')">
+                        <div class="setting-content">
+                            <span class="setting-icon">🧠</span>
+                            <span class="setting-label">Параметры провайдера</span>
+                        </div>
+                        <span class="chevron">›</span>
+                    </div>
+
+                    <div class="setting-item" onclick="openScreen('translation-screen')">
+                        <div class="setting-content">
+                            <span class="setting-icon">🌐</span>
+                            <span class="setting-label">Параметры перевода</span>
+                        </div>
+                        <span class="chevron">›</span>
+                    </div>
+                </div>
+
+                <!-- Группа 2 -->
+                <div class="setting-group">
+                    <div class="group-title">Внешний вид</div>
+                    <div class="setting-item" onclick="openScreen('theme-screen')">
+                        <div class="setting-content">
+                            <span class="setting-icon">🎨</span>
+                            <span class="setting-label">Тема приложения</span>
+                        </div>
+                        <div style="display:flex; align-items:center;">
+                            <span class="setting-value">Тёмная</span>
+                            <span class="chevron">›</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Группа 3 -->
+                <div class="setting-group">
+                    <div class="group-title">Информация</div>
+                    <div class="setting-item" onclick="openScreen('about-screen')">
+                        <div class="setting-content">
+                            <span class="setting-icon">ℹ️</span>
+                            <span class="setting-label">О нас</span>
+                        </div>
+                        <span class="chevron">›</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- 3. ЭКРАН: ПАРАМЕТРЫ ПРОВАЙДЕРА -->
+        <div id="provider-screen" class="screen">
+            <div class="screen-header">
+                <div class="back-btn" onclick="goBack('settings-main')">←</div>
+                <div class="screen-title">Провайдер</div>
+            </div>
+
+            <div class="settings-list">
+                <div class="setting-group">
+                    <div class="group-title">Выбор сервиса</div>
+                    <div class="setting-item">
+                        <span class="setting-label">Тип API</span>
+                        <span class="setting-value" style="color: var(--primary);">OpenAI Compatible ›</span>
+                    </div>
+                </div>
+
+                <div class="setting-group">
+                    <div class="input-group">
+                        <label class="input-label">BASE URL</label>
+                        <input type="text" class="text-input" value="https://api.openai.com/v1">
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">API KEY</label>
+                        <input type="password" class="text-input" value="sk-proj-..." placeholder="sk-...">
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">MODEL NAME</label>
+                        <input type="text" class="text-input" value="gpt-3.5-turbo">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- 4. ЭКРАН: ПАРАМЕТРЫ ПЕРЕВОДА (БЕЗ КОНТЕКСТА) -->
+        <div id="translation-screen" class="screen">
+            <div class="screen-header">
+                <div class="back-btn" onclick="goBack('settings-main')">←</div>
+                <div class="screen-title">Перевод</div>
+            </div>
+
+            <div class="settings-list">
+                <div class="setting-group">
+                    <div class="setting-item">
+                        <span class="setting-label">Исходный язык</span>
+                        <span class="setting-value">Авто ></span>
+                    </div>
+                    <div class="setting-item">
+                        <span class="setting-label">Целевой язык</span>
+                        <span class="setting-value">Русский ></span>
+                    </div>
+                </div>
+
+                <div class="setting-group">
+                    <div class="group-title">Продвинутые настройки</div>
+                    <!-- Пункт "Контекст" удален по вашему запросу -->
+                    
+                    <div class="input-group" style="padding: 16px; background: var(--surface); border-radius: 12px; margin-top:10px;">
+                        <label class="input-label">Системный промпт</label>
+                        <textarea class="text-input" rows="5" style="font-size: 13px; font-family: monospace;">You are a professional novel translator. Translate the text preserving the literary style and tone.</textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- 5. ЭКРАН: ТЕМА -->
+        <div id="theme-screen" class="screen">
+            <div class="screen-header">
+                <div class="back-btn" onclick="goBack('settings-main')">←</div>
+                <div class="screen-title">Тема</div>
+            </div>
+
+            <div class="settings-list">
+                <div class="setting-group">
+                    <div class="setting-item" onclick="selectTheme(this)">
+                        <span class="setting-label">Системная</span>
+                        <span class="check-icon">✓</span>
+                    </div>
+                    <div class="setting-item selected" onclick="selectTheme(this)">
+                        <span class="setting-label">Тёмная</span>
+                        <span class="check-icon">✓</span>
+                    </div>
+                    <div class="setting-item" onclick="selectTheme(this)">
+                        <span class="setting-label">Светлая</span>
+                        <span class="check-icon">✓</span>
+                    </div>
+                    <div class="setting-item" onclick="selectTheme(this)">
+                        <span class="setting-label">AMOLED (Чёрная)</span>
+                        <span class="check-icon">✓</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- 6. ЭКРАН: О НАС -->
+        <div id="about-screen" class="screen">
+            <div class="screen-header">
+                <div class="back-btn" onclick="goBack('settings-main')">←</div>
+                <div class="screen-title">О нас</div>
+            </div>
+
+            <div style="display:flex; flex-direction:column; align-items:center; padding: 40px 20px;">
+                <div style="width: 80px; height: 80px; background: var(--primary); border-radius: 20px; display:flex; align-items:center; justify-content:center; font-size:40px; margin-bottom: 20px; color: #000;">
+                    📚
+                </div>
+                <h2 style="color: var(--text-primary); margin: 0;">Novel Translator</h2>
+                <p style="color: var(--text-secondary); margin-top: 5px;">Версия 1.0.0 (Beta)</p>
+
+                <div style="width: 100%; margin-top: 40px; background: var(--surface); border-radius: 12px; overflow:hidden;">
+                    <div class="setting-item">
+                        <span class="setting-label">GitHub</span>
+                        <span class="chevron">›</span>
+                    </div>
+                    <div class="setting-item">
+                        <span class="setting-label">Telegram Канал</span>
+                        <span class="chevron">›</span>
+                    </div>
+                </div>
+
+                <p style="text-align:center; color: #555; font-size: 12px; margin-top: 40px;">
+                    © 2025 All rights reserved
+                </p>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // Логика FAB
+        const fabBtn = document.getElementById('fab-btn');
+        const fabMenu = document.getElementById('fab-menu');
+
+        function toggleFab() {
+            fabMenu.classList.toggle('open');
+            fabBtn.classList.toggle('active');
+        }
+
+        // Логика навигации
+        function openScreen(targetId) {
+            const screen = document.getElementById(targetId);
+            screen.classList.remove('slide-exit');
+            screen.classList.add('slide-enter');
+            
+            // Если открываем настройки, закрываем FAB если открыт
+            if(fabMenu.classList.contains('open')) toggleFab();
+        }
+
+        // Кнопка Назад (внутри настроек)
+        function goBack(targetId) {
+            // Находим текущий активный (последний открытый)
+            const activeScreens = document.querySelectorAll('.slide-enter');
+            const current = activeScreens[activeScreens.length - 1];
+            
+            if (current) {
+                current.classList.remove('slide-enter');
+                current.classList.add('slide-exit');
+            }
+        }
+
+        // Кнопка Назад из главного меню настроек (возврат на главную)
+        function closeSettings() {
+            const settingsMain = document.getElementById('settings-main');
+            settingsMain.classList.remove('slide-enter');
+            settingsMain.classList.add('slide-exit');
+        }
+
+        // Логика выбора темы
+        function selectTheme(element) {
+            const parent = element.parentElement;
+            const items = parent.querySelectorAll('.setting-item');
+            items.forEach(i => i.classList.remove('selected'));
+            element.classList.add('selected');
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Novel Details Minimal</title>
+    <style>
+        :root {
+            --primary: #BB86FC;
+            --bg-color: #121212;
+            --surface: #1E1E1E;
+            --surface-light: #2C2C2C;
+            --text-primary: #FFFFFF;
+            --text-secondary: #AAAAAA;
+            --divider: #333333;
+            --success: #4caf50;
+        }
+
+        body {
+            background-color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            font-family: -apple-system, sans-serif;
+            user-select: none;
+        }
+
+        .phone-frame {
+            width: 375px;
+            height: 812px;
+            background: var(--bg-color);
+            border-radius: 40px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            position: relative;
+            overflow: hidden;
+            border: 12px solid #000;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* --- NAVIGATION HEADER --- */
+        .nav-header {
+            position: absolute;
+            top: 40px;
+            left: 0;
+            right: 0;
+            height: 50px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 16px;
+            z-index: 20;
+        }
+
+        .icon-btn {
+            width: 40px; height: 40px;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(8px);
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 20px; cursor: pointer; border: none;
+        }
+
+        /* --- SCROLL CONTENT --- */
+        .scroll-content {
+            flex: 1;
+            overflow-y: auto;
+            background: var(--bg-color);
+        }
+        .scroll-content::-webkit-scrollbar { display: none; }
+
+        /* --- HERO SECTION --- */
+        .hero-section {
+            position: relative;
+            padding-top: 100px;
+            padding-bottom: 20px;
+        }
+
+        /* Размытый фон */
+        .hero-bg {
+            position: absolute; top: 0; left: 0; right: 0; height: 350px;
+            background-image: url('https://i.pinimg.com/736x/82/33/74/823374b3922e96c46a6f393848b59d9c.jpg');
+            background-size: cover;
+            background-position: center;
+            filter: blur(20px) brightness(0.6);
+            mask-image: linear-gradient(to bottom, black 40%, transparent 100%);
+            -webkit-mask-image: linear-gradient(to bottom, black 40%, transparent 100%);
+            z-index: 0;
+        }
+
+        .hero-content {
+            position: relative; z-index: 1;
+            padding: 0 20px;
+            display: flex; gap: 20px;
+            align-items: flex-end;
+        }
+
+        .book-cover {
+            width: 110px; height: 165px;
+            border-radius: 8px;
+            background-image: url('https://i.pinimg.com/736x/82/33/74/823374b3922e96c46a6f393848b59d9c.jpg');
+            background-size: cover;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.5);
+            flex-shrink: 0;
+        }
+
+        .book-info { 
+            flex: 1; 
+            /* Центрируем название по вертикали относительно обложки, если оно короткое */
+            display: flex; 
+            align-items: flex-end; 
+            height: 165px; /* Высота как у обложки */
+            padding-bottom: 10px;
+        }
+        
+        .book-title {
+            font-size: 24px; /* Чуть крупнее, раз нет другого текста */
+            font-weight: 700; 
+            color: white; 
+            line-height: 1.2; 
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+
+        /* --- ACTION BUTTONS --- */
+        .actions-row {
+            padding: 24px 20px;
+            display: flex; gap: 12px;
+        }
+
+        .btn-main {
+            flex: 1; height: 48px;
+            background: var(--primary);
+            border-radius: 12px;
+            border: none;
+            color: #000; font-weight: 700; font-size: 16px;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(187, 134, 252, 0.2);
+        }
+
+        .btn-icon {
+            width: 48px; height: 48px;
+            background: var(--surface-light);
+            border-radius: 12px;
+            border: none;
+            color: var(--primary); font-size: 20px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer;
+        }
+
+        /* --- SUMMARY --- */
+        .summary-section { padding: 0 20px 24px 20px; border-bottom: 1px solid var(--divider); }
+        .summary-text {
+            font-size: 14px; line-height: 1.6; color: var(--text-secondary);
+            display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+        }
+        .summary-more { color: var(--primary); font-size: 14px; margin-top: 4px; font-weight: 500; cursor: pointer; }
+
+        /* --- CHAPTERS --- */
+        .chapters-header {
+            padding: 20px;
+            display: flex; justify-content: space-between; align-items: flex-end;
+        }
+        .section-title { font-size: 18px; font-weight: 700; color: white; }
+        .sort-btn { font-size: 14px; color: var(--primary); cursor: pointer; }
+
+        .chapter-list { padding-bottom: 40px; }
+
+        .chapter-item {
+            padding: 16px 20px;
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid #1a1a1a;
+            cursor: pointer;
+        }
+        .chapter-item:active { background: var(--surface-light); }
+
+        .ch-left { display: flex; flex-direction: column; gap: 4px; }
+        .ch-title { font-size: 15px; color: var(--text-primary); font-weight: 500; }
+        .ch-sub { font-size: 12px; color: #666; }
+
+        /* Status Badges */
+        .status-translated { color: var(--success); font-size: 12px; background: rgba(76, 175, 80, 0.1); padding: 4px 8px; border-radius: 4px; display: flex; align-items: center; gap: 4px; }
+        .status-original { color: var(--text-secondary); font-size: 12px; display: flex; align-items: center; gap: 4px; background: rgba(255,255,255,0.05); padding: 4px 8px; border-radius: 4px;}
+
+    </style>
+</head>
+<body>
+
+    <div class="phone-frame">
+        
+        <!-- Navbar -->
+        <div class="nav-header">
+            <button class="icon-btn">←</button>
+            <button class="icon-btn">⋮</button>
+        </div>
+
+        <div class="scroll-content">
+            
+            <!-- Hero Section -->
+            <div class="hero-section">
+                <div class="hero-bg"></div>
+                
+                <div class="hero-content">
+                    <div class="book-cover"></div>
+                    <div class="book-info">
+                        <!-- ТОЛЬКО НАЗВАНИЕ -->
+                        <div class="book-title">Поднятие уровня в одиночку</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="actions-row">
+                <button class="btn-main">
+                    <span>📖</span> Читать (Гл. 179)
+                </button>
+                <button class="btn-icon" title="Пакетный перевод">
+                    ⚡
+                </button>
+                <button class="btn-icon" title="Редактировать">
+                    ✏️
+                </button>
+            </div>
+
+            <!-- Summary -->
+            <div class="summary-section">
+                <div class="summary-text">
+                    Десять лет назад открылись «Врата», соединившие мир людей с миром монстров. Люди, получившие особые способности для охоты на монстров внутри Врат, стали известны как «Охотники».
+                </div>
+                <div class="summary-more">Читать далее</div>
+            </div>
+
+            <!-- Chapters -->
+            <div class="chapters-header">
+                <div class="section-title">270 Глав</div>
+                <div class="sort-btn">⇅ Сначала новые</div>
+            </div>
+
+            <div class="chapter-list">
+                
+                <!-- Item 1 (Translated) -->
+                <div class="chapter-item">
+                    <div class="ch-left">
+                        <div class="ch-title">Глава 179: Финал</div>
+                        <div class="ch-sub">Вчера • 12 стр.</div>
+                    </div>
+                    <div class="status-translated">
+                        <span>✓</span> RU
+                    </div>
+                </div>
+
+                <!-- Item 2 (Translated) -->
+                <div class="chapter-item">
+                    <div class="ch-left">
+                        <div class="ch-title">Глава 178: Битва королей</div>
+                        <div class="ch-sub">2 дня назад • 14 стр.</div>
+                    </div>
+                    <div class="status-translated">
+                        <span>✓</span> RU
+                    </div>
+                </div>
+
+                <!-- Item 3 (Original) -->
+                <div class="chapter-item" style="opacity: 0.8">
+                    <div class="ch-left">
+                        <div class="ch-title" style="color: #bbb;">Chapter 177: Arise</div>
+                        <div class="ch-sub">Оригинал (EN)</div>
+                    </div>
+                    <div class="status-original">
+                        <span>⬇</span> EN
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,20 @@
+
+> novel-translator@1.0.0 start
+> expo start
+
+Starting project at E:\AI\Work\translatev3
+PluginError: Unable to resolve a valid config plugin for expo-keep-awake.
+• No "app.plugin.js" file found in expo-keep-awake: config plugins are typically exported from an "app.plugin.js" file in the package root.
+• main export of expo-keep-awake does not appear to be a config plugin: the following error was thrown when importing E:\AI\Work\translatev3\node_modules\expo-keep-awake\src\index.ts: Unexpected identifier 'EventSubscription' 
+Verify that expo-keep-awake includes a config plugin. If it does not, then remove the entry from plugins in your app config file. Learn more: https://docs.expo.dev/guides/config-plugins/
+SyntaxError: Unexpected identifier 'EventSubscription'
+    at compileSourceTextModule (node:internal/modules/esm/utils:338:16)
+    at ModuleLoader.importSyncForRequire (node:internal/modules/esm/loader:322:18)
+    at loadESMFromCJS (node:internal/modules/cjs/loader:1411:24)
+    at Module._compile (node:internal/modules/cjs/loader:1544:5)
+    at Object..js (node:internal/modules/cjs/loader:1699:10)
+    at Module.load (node:internal/modules/cjs/loader:1313:32)
+    at Function._load (node:internal/modules/cjs/loader:1123:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:217:24)
+    at Module.require (node:internal/modules/cjs/loader:1335:12)
