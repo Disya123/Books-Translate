@@ -4,7 +4,7 @@
 
 - **Русский** — [README-ru.md](README-ru.md)
 
-## 📱 Mobile App for Reading, Editing, and Translating Visual Novels
+## 📱 Mobile App for Reading, Editing, and Translating Novels
 
 An offline Android and iOS app for importing, reading, editing, and translating novels in **FB2, EPUB, ZIP, and TXT** formats.
 
